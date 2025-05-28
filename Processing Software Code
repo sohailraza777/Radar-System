@@ -1,0 +1,77 @@
+import processing.serial.*;
+
+Serial myPort;
+String data = "";
+int angle = 0, distance = 0;
+
+void setup() {
+  size(800, 600);
+  background(0);
+
+  // Initialize serial communication
+  myPort = new Serial(this, "COM11", 9600); // Change COM port as needed
+  myPort.bufferUntil('.');
+}
+
+void draw() {
+  fill(0, 30);
+  noStroke();
+  rect(0, 0, width, height);  // Fading background effect
+
+  drawRadar();
+  drawInfo();
+}
+
+void serialEvent(Serial myPort) {
+  data = myPort.readStringUntil('.');
+  if (data != null) {
+    data = trim(data);
+    if (data.contains(",")) {
+      String[] parts = split(data, ',');
+      if (parts.length == 2) {
+        angle = int(parts[0]);
+        distance = int(parts[1]);
+      }
+    }
+  }
+}
+
+void drawRadar() {
+  pushMatrix();
+  translate(width / 2, height / 2);  // Centered radar
+
+  stroke(0, 255, 0);
+  strokeWeight(2);
+  noFill();
+
+  // Full circular arcs
+  for (int r = 100; r <= 400; r += 100) {
+    ellipse(0, 0, r * 2, r * 2);
+  }
+
+  // 360-degree angle lines every 30 degrees
+  for (int a = 0; a < 360; a += 30) {
+    float x = 400 * cos(radians(a));
+    float y = 400 * sin(radians(a));
+    line(0, 0, x, y);
+  }
+
+  // Plot only when angle is within the Arduino's sweep range
+  if (angle >= 0 && angle <= 180) {
+    float x = distance * 10 * cos(radians(angle));
+    float y = distance * 10 * sin(radians(angle));
+    stroke(0, 255, 0);
+    line(0, 0, x, y);
+    fill(0, 255, 0);
+    ellipse(x, y, 10, 10);
+  }
+
+  popMatrix();
+}
+
+void drawInfo() {
+  fill(255);
+  textSize(20);
+  text("Angle: " + angle + "°", 20, 30);
+  text("Distance: " + distance + " cm", 20, 60);
+}
