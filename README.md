@@ -41,26 +41,6 @@ Processing IDE script for radar sweep simulation.
 
 Displays real-time angle and distance arcs.
 
-💻 Folder Structure
-bash
-Copy
-Edit
-/Radar-System-ESP8266
-│
-├── Arduino_Code/           # ESP8266 sketch (Radar + Blynk)
-├── Processing_GUI/         # Radar visualization code (optional)
-├── Blynk_Setup.md          # Blynk configuration instructions
-├── Schematics/             # Circuit diagram and setup images
-└── README.md               # Project overview and documentation
-🛠️ Getting Started
-Connect the components as per circuit diagram.
-
-Flash the provided Arduino code to ESP8266 using Arduino IDE.
-
-Set up Blynk app with correct auth token and virtual pins.
-
-(Optional) Run Processing sketch for visual radar display.
-
 🎓 Project Info
 Branch: CS (IoT)-B, Department of Internet of Things
 
