@@ -1,0 +1,95 @@
+//Arduino Code
+#define BLYNK_TEMPLATE_ID "TMPL324_hCdRF"
+#define BLYNK_TEMPLATE_NAME "Radar System"
+#define BLYNK_AUTH_TOKEN "b3AjNglXEM_XcKAP6wlGsCpiTt8tlIKS"
+
+#include <Servo.h>
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+
+// Blynk Auth and WiFi
+char auth[] = BLYNK_AUTH_TOKEN;
+char ssid[] = "Sohail";
+char pass[] = "sohail@123";
+
+// Pin Definitions
+const int trigPin = D5;
+const int echoPin = D6;
+const int servoPin = D4;
+
+Servo myServo;
+
+long duration;
+int distance;
+bool autoScan = false;
+int manualAngle = 90; // default angle
+
+BlynkTimer timer;
+
+void setup() {
+  Serial.begin(9600);
+  Blynk.begin(auth, ssid, pass);
+
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  myServo.attach(servoPin);
+
+  // Call readData every 500ms
+  timer.setInterval(500L, scanIfEnabled);
+}
+
+void loop() {
+  Blynk.run();
+  timer.run();
+}
+
+void scanIfEnabled() {
+  if (autoScan) {
+    for (int angle = 0; angle <= 180; angle += 2) {
+      moveAndSend(angle);
+    }
+    for (int angle = 180; angle >= 0; angle -= 2) {
+      moveAndSend(angle);
+    }
+  } else {
+    myServo.write(manualAngle);
+    distance = getDistance();
+    Serial.print(manualAngle);
+    Serial.print(",");
+    Serial.print(distance);
+    Serial.println(".");
+    Blynk.virtualWrite(V2, String("Manual Angle: ") + manualAngle + " | Distance: " + distance + " cm");
+  }
+}
+
+void moveAndSend(int angle) {
+  myServo.write(angle);
+  delay(20);
+  distance = getDistance();
+  Serial.print(angle);
+  Serial.print(",");
+  Serial.print(distance);
+  Serial.println(".");
+  Blynk.virtualWrite(V2, String("Auto Angle: ") + angle + " | Distance: " + distance + " cm");
+}
+
+// Triggered from Blynk app
+BLYNK_WRITE(V0) {
+  autoScan = param.asInt();  // 1 or 0
+}
+
+// Manual angle control
+BLYNK_WRITE(V1) {
+  manualAngle = param.asInt(); // 0 - 180
+}
+
+int getDistance() {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH, 30000); // 30ms timeout
+  if (duration == 0) return -1; // no echo
+  return duration * 0.034 / 2;
+}
